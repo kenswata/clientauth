@@ -1,0 +1,28 @@
+version: "3"
+services:
+  rproxy:
+    image: byjg/nginx-extras:latest
+    container_name: test-rproxy
+    volumes:
+      - ./rproxy/etc/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./rproxy/etc/nginx/client_certificates:/etc/nginx/client_certificates
+    depends_on:
+      - web
+    ports:
+      - 443:443
+    networks:
+      - proxy-link
+
+  web:
+    image: nginx:latest
+    container_name: test-web
+    volumes:
+      - ./web/etc/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./web/public:/usr/share/nginx/html:ro
+    ports:
+      - 9000:8080
+    networks:
+      - proxy-link
+
+networks:
+  proxy-link:

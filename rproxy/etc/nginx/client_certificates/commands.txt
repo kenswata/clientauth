@@ -1,0 +1,37 @@
+
+   27  openssl genrsa -aes256 -out ca.key 4096
+   29  openssl req -new -x509 -days 365 -key ca.key -out ca.crt
+
+サーバー証明書
+   65  openssl genrsa -aes256 -out server.key 4096
+   67  openssl rsa -in server.key -out server.pk
+   68  openssl req -new -key server.key -extfile subjectnames.txt -out server.csr
+   # 70  openssl x509 -req -days 365 -CA ca.crt -extfile subjectnames.txt -CAkey ca.key -set_serial 01 -in server.csr -out server.crt
+   72  openssl x509 -noout -text -in server.crt
+
+ クライアント証明書
+   40  openssl genrsa -aes256 -out 000000.key 4096
+   41  openssl req -new -key 000000.key -out 000000.csr
+   53  openssl req -in 000000.csr -noout -text
+   # 54  openssl x509 -req -days 365 -in 000000.csr -CA ca.crt -CAkey ca.key -set_serial 02 -out 000000.crt
+   62  openssl pkcs12 -export -out 000000.pfx -inkey 000000.key -in 000000.crt -certfile ca.crt
+
+サーバ証明書とクライアント証明書のCAによる署名は 'openssl ca' コマンドで実施。
+サーバー証明書はchromeで使用できるようにCNで指定ではなく、
+`X509v3 Subject Alternative Name`のDNSでドメインを指定。
+
+
+オレオレCA証明書⇒ユーザーPCの信頼されたルート証明機関にインストール
+ca.crt
+ca.key or private/cakey.pem (同一) ： キー
+
+サーバー証明書(オレオレCAで署名)⇒nginxに指定
+server.crt
+server.key：キー
+server.pk：キー(パスフレーズ解除)⇒nginx用
+
+失効リスト(CRL)
+crl.pem
+
+クライアント証明書(オレオレCAで署名)⇒ユーザーPCの個人証明書にインストール
+000000.pfx(インストールパスワードなし)
